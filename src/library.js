@@ -150,13 +150,13 @@ class MysticalSorenUtilities {
     static removeState(stateName) {
         state[stateName] = undefined
     }
-    static addStoryCard(title = "", entry = "", description = "", type = "Class", keys = "") {
+    static addStoryCard(title = "", entry = "", description = "", type = "class", keys = "") {
         const card = storyCards[addStoryCard(keys, entry, type) - 1]
         card.title = title
         card.description = description
         return card
     }
-    static addStoryCardConfig(namespace = "", type = "Class", description = "") {
+    static addStoryCardConfig(namespace = "", type = "class", description = "") {
         const card = this.addStoryCard(namespace, JSON.stringify(this.getState(namespace), (_, value) => { return value }, 1), description, type)
         return card
     }
