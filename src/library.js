@@ -7,6 +7,33 @@ class MysticalSorenUtilities {
             }
         }
     }
+    /*
+    static TOML = {
+        composeObject(jsObject = {}) {
+            let tomlResult = ""
+            if (!MysticalSorenUtilities.hasKeys(jsObject)) {
+                if (MysticalSorenUtilities.isPlainObject(jsObject)) {
+                    MysticalSorenUtilities.PrivateStatic.debug("TOML Warning: Empty Object.")
+                    return {}
+                }
+                return tomlResult
+            }
+            for (const [key, value] of Object.entries(jsObject)) {
+                if (MysticalSorenUtilities.isPlainObject(value)) {
+                    tomlResult += `[${key}]`
+                    this.composeObject(value)
+                    continue
+                } else if (typeof value === "string") {
+                    tomlResult += `${key} = "${value}"`
+                    continue
+                } else if (typeof value === "number" || typeof value === "boolean") {
+                    tomlResult += `${key} = ${value}`
+                    continue
+                }
+            }
+        }
+    }
+        */
     static getTurnOrder() {
         return info.actionCount || 0;
     }
