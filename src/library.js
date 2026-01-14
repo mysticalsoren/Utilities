@@ -1,19 +1,66 @@
 class MysticalSorenUtilities {
-    static PrivateStatic = {
-        DEBUG: true,
-        debug(msg) {
-            if (this.DEBUG) {
-                console.log(`MysticalSorenUtilities: ${msg}`)
+    static #Private = {
+        Debugger: this.Debugger("MysticalSorenUtilities")
+    }
+    // #region Debugger
+    /**
+     * @typedef {Object} Debugger
+     * @property {String} namespace dasd
+     * @property {String} separator
+     * @property {boolean} enabled
+     * @property {(...any) => void} log
+     */
+    /**
+     * A class for everything related to troubleshooting and logging.
+     * @param {String} namespace 
+     * @param {String} separator 
+     * @returns {Debugger} Debugger. A class.
+     */
+    static Debugger(namespace = "", separator = " ") {
+        return {
+            namespace: namespace,
+            separator: separator,
+            enabled: true,
+            log(...values) {
+                if (!this.enabled) {
+                    return
+                }
+                let apex = typeof namespace === "string" ? `${namespace}:` : "UnnamedDebugger:"
+                const composeString = (value) => {
+                    let result = ""
+                    if (MysticalSorenUtilities.hasItems(value)) {
+                        result += "["
+                        value.forEach(item => {
+                            result += `${composeString(item)},`
+                        });
+                        result = result.substring(0, result.length - 1) + "]"
+                        return result
+                    }
+                    if (MysticalSorenUtilities.hasKeys(value)) {
+                        result += "{"
+                        for (const [k, v] of value.entries()) {
+                            result += `${k}: ${composeString(v)},`
+                        }
+                        result = result.substring(0, result.length - 1) + "}"
+                        return result
+                    }
+                    return `${value}`
+                }
+                for (const value of values) {
+                    apex += separator + composeString(value)
+                }
+                console.log(apex)
             }
         }
     }
+    //  #endregion
     /*
     static TOML = {
         composeObject(jsObject = {}) {
             let tomlResult = ""
             if (!MysticalSorenUtilities.hasKeys(jsObject)) {
                 if (MysticalSorenUtilities.isPlainObject(jsObject)) {
-                    MysticalSorenUtilities.PrivateStatic.debug("TOML Warning: Empty Object.")
+                    MysticalSorenUtilities.#Private.debug("TOML Warning: Empty Object.")
                     return {}
                 }
                 return tomlResult
@@ -33,7 +80,7 @@ class MysticalSorenUtilities {
             }
         }
     }
-        */
+    */
     static getTurnOrder() {
         return info.actionCount || 0;
     }
@@ -48,32 +95,37 @@ class MysticalSorenUtilities {
     }
     static randomItem(arr) {
         if (!this.hasItems(arr)) {
-            this.PrivateStatic.debug("Could not get random item from array.")
+            this.#Private.Debugger.log("Could not get random item from array.")
         }
         return arr[Math.floor(Math.random() * arr.length)]
     }
     static getRecentAction(context) {
         if (!this.hasItems(history)) {
-            this.PrivateStatic.debug("Could not get recent action. There are no actions.")
+            this.#Private.Debugger.log("Could not get recent action. There are no actions.")
             return {}
         }
         if (typeof context != "string") {
-            this.PrivateStatic.debug("Could not get recent action. context is not a string.")
+            this.#Private.Debugger.log("Could not get recent action. context is not a string.")
             return {}
         }
         if (context.toLowerCase() in ["context", "output"]) {
-            this.PrivateStatic.debug("Could not get recent action. It isn't ran in the Context Hook!")
+            this.#Private.Debugger.log("Could not get recent action. It isn't ran in the Context Hook!")
             if (context.toLowerCase() === "input") {
-                this.PrivateStatic.debug('Use "text" instead to get the recent action!')
+                this.#Private.Debugger.log('Use "text" instead to get the recent action!')
                 return {}
             }
             return {}
         }
         return history[history.length - 1]
     }
+    /**
+     * Gets the storyCards index given an storycard.id
+     * @param {number | String} id storycard.id
+     * @returns {number} number. If not found, returns -1.
+     */
     static getStoryCardIndexById(id) {
         if (typeof id in ["number", "string"]) {
-            this.PrivateStatic.debug("Could not get story card by id. id is not a number!")
+            this.#Private.Debugger.log("Could not get story card by id. id is not a number!")
             return -1
         }
         id = String(id)
@@ -82,13 +134,13 @@ class MysticalSorenUtilities {
                 return index
             }
         }
-        this.PrivateStatic.debug(`Could not get story card by id with the search id of "${id}"`)
+        this.#Private.Debugger.log(`Could not get story card by id with the search id of "${id}"`)
         return -1
     }
     static getStoryCardIdsByName(name) {
         const result = []
         if (typeof name !== "string") {
-            this.PrivateStatic.debug("Could not get story card id by name. name is not a number!")
+            this.#Private.Debugger.log("Could not get story card id by name. name is not a number!")
             return result
         }
         for (const storyCard of storyCards) {
@@ -101,7 +153,7 @@ class MysticalSorenUtilities {
     static getStoryCardsByIds(ids) {
         const result = []
         if (!this.hasItems(ids)) {
-            this.PrivateStatic.debug("Could not get story cards. There are no ids to go through.")
+            this.#Private.Debugger.log("Could not get story cards. There are no ids to go through.")
             return result
         }
         for (const id of ids) {
@@ -116,7 +168,7 @@ class MysticalSorenUtilities {
     static getStoryCardsByNames(names) {
         const result = new Set()
         if (!this.hasItems(names)) {
-            this.PrivateStatic.debug("Could not get story cards. There are no names to go through.")
+            this.#Private.Debugger.log("Could not get story cards. There are no names to go through.")
             return Array.from(result)
         }
         for (const name of names) {
@@ -131,7 +183,7 @@ class MysticalSorenUtilities {
     static getStoryCardsAsMap(_storyCards) {
         let __storyCards = _storyCards
         if (!this.hasItems(_storyCards)) {
-            this.PrivateStatic.debug("Given storyCards has no items. Defaulting to global storyCards")
+            this.#Private.Debugger.log("Given storyCards has no items. Defaulting to global storyCards")
             __storyCards = storyCards
         }
         const result = new Map()
