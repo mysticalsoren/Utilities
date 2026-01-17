@@ -83,17 +83,189 @@ class MysticalSorenUtilities {
     */
     // #region AIDungeon
     static AIDungeon = {
-        getTurnOrder: this.getTurnOrder,
-        getRecentAction: this.getRecentAction,
-        getStoryCardIndexById: this.getStoryCardIndexById,
-        getStoryCardsByIds: this.getStoryCardsByIds,
-        getStoryCardIdsByName: this.getStoryCardIdsByName,
-        getStoryCardsByNames: this.getStoryCardsByNames,
-        getStoryCardsAsMap: this.getStoryCardsAsMap,
-        addStoryCard: this.addStoryCard,
-        setState: this.setState,
-        getState: this.getState,
-        removeState: this.removeState,
+        /**
+         * @typedef {Object} HistoryEntry
+         * @property {String} text
+         * @property {String} rawText deprecated, use text.
+         * @property {"start" | "continue" | "do" | "say" | "story" | "see"} type
+         */
+        /**
+         * @typedef {Object} StoryCard
+         * @property {String} id
+         * @property {String} createdAt
+         * @property {String} updatedAt
+         * @property {String} keys also known as Triggers
+         * @property {String} entry
+         * @property {String} type
+         * @property {String} title
+         * @property {String} description also known as Notes
+         * @property {boolean} useForCharacterCreation
+         */
+        /**
+         * Gets the current turn order.
+         * @returns {number} number. The current turn order
+         */
+        getTurnOrder() {
+            return info.actionCount || 0
+        },
+        /**
+         * Returns the latest action taken by the player.
+         * @param {"input" | "context" | "output"} context the current context it is running on
+         * @returns {HistoryEntry | {}} HistoryEntry. On fail, it returns a empty object.
+         */
+        getRecentAction(context) {
+            if (!this.hasItems(history)) {
+                this.#Private.Debugger.log("Could not get recent action. There are no actions.")
+                return {}
+            }
+            if (typeof context != "string") {
+                this.#Private.Debugger.log("Could not get recent action. context is not a string.")
+                return {}
+            }
+            if (context.toLowerCase() in ["context", "output"]) {
+                this.#Private.Debugger.log("Could not get recent action. It isn't ran in the Context Hook!")
+                if (context.toLowerCase() === "input") {
+                    this.#Private.Debugger.log('Use "text" instead to get the recent action!')
+                    return {}
+                }
+                return {}
+            }
+            return history[history.length - 1]
+        },
+        /**
+         * Gets the storyCards index given an storycard.id
+         * @param {number | String} id storycard.id
+         * @returns {number} number. If not found, returns -1.
+         */
+        getStoryCardIndexById(id) {
+            if (typeof id in ["number", "string"]) {
+                this.#Private.Debugger.log("Could not get story card by id. id is not a number!")
+                return -1
+            }
+            id = String(id)
+            for (const [index, storyCard] of storyCards.entries()) {
+                if (storyCard.id === id) {
+                    return index
+                }
+            }
+            this.#Private.Debugger.log(`Could not get story card by id with the search id of "${id}"`)
+            return -1
+        },
+        /**
+         * Gets StoryCards given a list of storycard.id
+         * @param {String[] | number[]} ids a list of storycard.id
+         * @returns {StoryCard[]} A array of StoryCards
+         */
+        getStoryCardsByIds(ids) {
+            const result = []
+            if (!this.hasItems(ids)) {
+                this.#Private.Debugger.log("Could not get story cards. There are no ids to go through.")
+                return result
+            }
+            for (const id of ids) {
+                const idx = this.getStoryCardIndexById(id)
+                if (idx < 0) {
+                    continue
+                }
+                result.push(storyCards[idx])
+            }
+            return result
+        },
+        /**
+         * Gets a list of storycard ids matching the name given.
+         * @param {String} name storycard.title
+         * @returns {String[]} An array of storycard.id, if any.
+         */
+        getStoryCardIdsByName(name) {
+            const result = []
+            if (typeof name !== "string") {
+                this.#Private.Debugger.log("Could not get story card id by name. name is not a number!")
+                return result
+            }
+            for (const storyCard of storyCards) {
+                if (storyCard.title === name) {
+                    result.push(storyCard.id)
+                }
+            }
+            return result
+        },
+        /**
+         * Gets StoryCards matching the name(s) given.
+         * @param {String[]} names a Array of storycard.title
+         * @returns {StoryCard[]}
+         */
+        getStoryCardsByNames(names) {
+            const result = new Set()
+            if (!this.hasItems(names)) {
+                this.#Private.Debugger.log("Could not get story cards. There are no names to go through.")
+                return Array.from(result)
+            }
+            for (const name of names) {
+                const ids = this.getStoryCardIdsByName(name)
+                const _storyCards = this.getStoryCardsByIds(ids)
+                for (const storyCard of _storyCards) {
+                    result.add(storyCard)
+                }
+            }
+            return Array.from(result)
+        },
+        /**
+         * Converts a array of StoryCards into a Map with the storycard.id
+         * being the key to the StoryCard
+         * @param {StoryCard[]} _storyCards An array of StoryCards
+         * @returns {Map<string,StoryCard>} an map of storycard.id keys to StoryCard values
+         */
+        getStoryCardsAsMap(_storyCards) {
+            let __storyCards = _storyCards
+            if (!this.hasItems(_storyCards)) {
+                this.#Private.Debugger.log("Given storyCards has no items. Defaulting to global storyCards")
+                __storyCards = storyCards
+            }
+            const result = new Map()
+            for (const storyCard of __storyCards) {
+                result.set(storyCard.id, storyCard)
+            }
+            return result
+        },
+        /**
+         * Adds a StoryCard.
+         * @param {String} title the name of the story card
+         * @param {String} entry the contents of the story card
+         * @param {String} description the description of the story card
+         * @param {String} type the category of the story card
+         * @param {String} keys the triggers of the story card
+         * @returns {StoryCard}
+         */
+        addStoryCard(title = "", entry = "", description = "", type = "class", keys = "") {
+            const card = storyCards[addStoryCard(keys, entry, type) - 1]
+            card.title = title
+            card.description = description
+            return card
+        },
+        /**
+         * Sets the state to the global state.
+         * @param {String} stateName the state name
+         * @param {Object} stateObject the state object
+         */
+        setState(stateName, stateObject) {
+            state[stateName] = stateObject
+        },
+        /**
+         * Gets the state.
+         * @param {String} stateName the state name
+         * @param {Object} alternative the given result if the given stateName is undefined.
+         * @returns {Object}
+         */
+        getState(stateName, alternative = {}) {
+            return state[stateName] || alternative
+        },
+        /**
+         * Removes the state.
+         * @param {String} stateName the state name
+         */
+        removeState(stateName) {
+            state[stateName] = undefined
+        },
     }
     // #endregion
     /**
@@ -102,7 +274,7 @@ class MysticalSorenUtilities {
      * @returns {number} number
      */
     static getTurnOrder() {
-        return info.actionCount || 0;
+        return this.AIDungeon.getTurnOrder()
     }
     static hasItems(arr) {
         return Array.isArray(arr) && arr.length > 0
@@ -122,72 +294,35 @@ class MysticalSorenUtilities {
     /**
      * @typedef {Object} HistoryEntry
      * @property {String} text
-     * @property {String} rawText deprecated, yse text.
+     * @property {String} rawText deprecated, use text.
      * @property {"start" | "continue" | "do" | "say" | "story" | "see"} type
      */
     /**
      * Returns the latest action taken by the player.
-     * @deprecated
+     * @deprecated Moved to MysticalSorenUtilities.AIDungeon
      * @param {"input" | "context" | "output"} context the current context it is running on
      * @returns {HistoryEntry | {}} HistoryEntry. On fail, it returns a empty object.
      */
     static getRecentAction(context) {
-        if (!this.hasItems(history)) {
-            this.#Private.Debugger.log("Could not get recent action. There are no actions.")
-            return {}
-        }
-        if (typeof context != "string") {
-            this.#Private.Debugger.log("Could not get recent action. context is not a string.")
-            return {}
-        }
-        if (context.toLowerCase() in ["context", "output"]) {
-            this.#Private.Debugger.log("Could not get recent action. It isn't ran in the Context Hook!")
-            if (context.toLowerCase() === "input") {
-                this.#Private.Debugger.log('Use "text" instead to get the recent action!')
-                return {}
-            }
-            return {}
-        }
-        return history[history.length - 1]
+        return this.AIDungeon.getRecentAction(context)
     }
     /**
      * Gets the storyCards index given an storycard.id
-     * @deprecated
+     * @deprecated Moved to MysticalSorenUtilities.AIDungeon
      * @param {number | String} id storycard.id
      * @returns {number} number. If not found, returns -1.
      */
     static getStoryCardIndexById(id) {
-        if (typeof id in ["number", "string"]) {
-            this.#Private.Debugger.log("Could not get story card by id. id is not a number!")
-            return -1
-        }
-        id = String(id)
-        for (const [index, storyCard] of storyCards.entries()) {
-            if (storyCard.id === id) {
-                return index
-            }
-        }
-        this.#Private.Debugger.log(`Could not get story card by id with the search id of "${id}"`)
-        return -1
+        return this.AIDungeon.getStoryCardIndexById(id)
     }
     /**
      * Gets a list of storycard ids matching the name given.
-     * @deprecated
+     * @deprecated Moved to MysticalSorenUtilities.AIDungeon
      * @param {String} name storycard.title
      * @returns {String[]} An array of storycard.id, if any.
      */
     static getStoryCardIdsByName(name) {
-        const result = []
-        if (typeof name !== "string") {
-            this.#Private.Debugger.log("Could not get story card id by name. name is not a number!")
-            return result
-        }
-        for (const storyCard of storyCards) {
-            if (storyCard.title === name) {
-                result.push(storyCard.id)
-            }
-        }
-        return result
+        return this.AIDungeon.getStoryCardIdsByName(name)
     }
     /**
      * @typedef {Object} StoryCard
@@ -203,95 +338,62 @@ class MysticalSorenUtilities {
      */
     /**
      * Gets StoryCards given a list of storycard.id
-     * @deprecated
+     * @deprecated Moved to MysticalSorenUtilities.AIDungeon
      * @param {String[] | number[]} ids a list of storycard.id
      * @returns {StoryCard[]} A array of StoryCards
      */
     static getStoryCardsByIds(ids) {
-        const result = []
-        if (!this.hasItems(ids)) {
-            this.#Private.Debugger.log("Could not get story cards. There are no ids to go through.")
-            return result
-        }
-        for (const id of ids) {
-            const idx = this.getStoryCardIndexById(id)
-            if (idx < 0) {
-                continue
-            }
-            result.push(storyCards[idx])
-        }
-        return result
+        return this.AIDungeon.getStoryCardsByIds(ids)
     }
     /**
      * Gets StoryCards matching the name(s) given.
-     * @deprecated
+     * @deprecated Moved to MysticalSorenUtilities.AIDungeon
      * @param {String[]} names a Array of storycard.title
      * @returns {StoryCard[]}
      */
     static getStoryCardsByNames(names) {
-        const result = new Set()
-        if (!this.hasItems(names)) {
-            this.#Private.Debugger.log("Could not get story cards. There are no names to go through.")
-            return Array.from(result)
-        }
-        for (const name of names) {
-            const ids = this.getStoryCardIdsByName(name)
-            const _storyCards = this.getStoryCardsByIds(ids)
-            for (const storyCard of _storyCards) {
-                result.add(storyCard)
-            }
-        }
-        return Array.from(result)
+        return this.AIDungeon.getStoryCardsByNames(names)
     }
     /**
      * Converts a array of StoryCards into a Map with the storycard.id
      * being the key to the StoryCard
-     * @deprecated
+     * @deprecated Moved to MysticalSorenUtilities.AIDungeon
      * @param {StoryCard[]} _storyCards An array of StoryCards
      * @returns {Map<string,StoryCard>} an map of storycard.id keys to StoryCard values
      */
     static getStoryCardsAsMap(_storyCards) {
-        let __storyCards = _storyCards
-        if (!this.hasItems(_storyCards)) {
-            this.#Private.Debugger.log("Given storyCards has no items. Defaulting to global storyCards")
-            __storyCards = storyCards
-        }
-        const result = new Map()
-        for (const storyCard of __storyCards) {
-            result.set(storyCard.id, storyCard)
-        }
-        return result
+        return this.AIDungeon.getStoryCardsAsMap(_storyCards)
     }
     /**
      * Sets the state to the global state.
-     * @deprecated
+     * @deprecated Moved to MysticalSorenUtilities.AIDungeon
      * @param {String} stateName the state name
      * @param {Object} stateObject the state object
      */
     static setState(stateName, stateObject) {
-        state[stateName] = stateObject
+        this.AIDungeon.setState(stateName, stateObject)
     }
     /**
      * Gets the state.
-     * @deprecated
+     * @deprecated Moved to MysticalSorenUtilities.AIDungeon
      * @param {String} stateName the state name
      * @param {Object} alternative the given result if the given stateName is undefined.
      * @returns {Object}
      */
     static getState(stateName, alternative = {}) {
-        return state[stateName] || alternative
+        return this.AIDungeon.getState(stateName, alternative)
     }
     /**
      * Removes the state.
-     * @deprecated
+     * @deprecated Moved to MysticalSorenUtilities.AIDungeon
      * @param {String} stateName the state name
      */
     static removeState(stateName) {
-        state[stateName] = undefined
+        this.AIDungeon.removeState(stateName)
     }
     /**
      * Adds a StoryCard.
-     * @deprecated
+     * @deprecated Moved to MysticalSorenUtilities.AIDungeon
      * @param {String} title the name of the story card
      * @param {String} entry the contents of the story card
      * @param {String} description the description of the story card
@@ -300,10 +402,7 @@ class MysticalSorenUtilities {
      * @returns {StoryCard}
      */
     static addStoryCard(title = "", entry = "", description = "", type = "class", keys = "") {
-        const card = storyCards[addStoryCard(keys, entry, type) - 1]
-        card.title = title
-        card.description = description
-        return card
+        return this.AIDungeon.addStoryCard(title, entry, description, type, keys)
     }
     /**
      * Adds the configuration.
