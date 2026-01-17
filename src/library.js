@@ -268,14 +268,7 @@ class MysticalSorenUtilities {
         },
     }
     // #endregion
-    /**
-     * Gets the current turn order.
-     * @deprecated Moved to MysticalSorenUtilities.AIDungeon
-     * @returns {number} number
-     */
-    static getTurnOrder() {
-        return this.AIDungeon.getTurnOrder()
-    }
+
     static hasItems(arr) {
         return Array.isArray(arr) && arr.length > 0
     }
@@ -290,6 +283,15 @@ class MysticalSorenUtilities {
             this.#Private.Debugger.log("Could not get random item from array.")
         }
         return arr[Math.floor(Math.random() * arr.length)]
+    }
+    // #region Deprecated
+    /**
+     * Gets the current turn order.
+     * @deprecated Moved to MysticalSorenUtilities.AIDungeon
+     * @returns {number} number
+     */
+    static getTurnOrder() {
+        return this.AIDungeon.getTurnOrder()
     }
     /**
      * @typedef {Object} HistoryEntry
@@ -416,4 +418,5 @@ class MysticalSorenUtilities {
         const card = this.addStoryCard(namespace, JSON.stringify(this.getState(namespace), (_, value) => { return value }, 1), description, type)
         return card
     }
+    // #endregion
 }
