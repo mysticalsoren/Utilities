@@ -5,27 +5,27 @@ class MysticalSorenUtilities {
     // #region Debugger
     /**
      * @typedef {Object} Debugger
-     * @property {String} namespace dasd
+     * @property {String} namespace
      * @property {String} separator
      * @property {boolean} enabled
      * @property {(...any) => void} log
      */
     /**
      * A class for everything related to troubleshooting and logging.
-     * @param {String} namespace 
-     * @param {String} separator 
+     * @param {String} namespace  Default value: "UnnamedDebugger"
+     * @param {String} separator Default value: " "
      * @returns {Debugger} Debugger. A class.
      */
     static Debugger(namespace = "", separator = " ") {
         return {
-            namespace: namespace,
+            namespace: typeof namespace === "string" ? namespace : "UnnamedDebugger",
             separator: separator,
             enabled: true,
             log(...values) {
                 if (!this.enabled) {
                     return
                 }
-                let apex = typeof namespace === "string" ? `${namespace}:` : "UnnamedDebugger:"
+                let apex = namespace + ":"
                 const composeString = (value) => {
                     let result = ""
                     if (MysticalSorenUtilities.hasItems(value)) {
@@ -81,6 +81,26 @@ class MysticalSorenUtilities {
         }
     }
     */
+    // #region AIDungeon
+    static AIDungeon = {
+        getTurnOrder: this.getTurnOrder,
+        getRecentAction: this.getRecentAction,
+        getStoryCardIndexById: this.getStoryCardIndexById,
+        getStoryCardsByIds: this.getStoryCardsByIds,
+        getStoryCardIdsByName: this.getStoryCardIdsByName,
+        getStoryCardsByNames: this.getStoryCardsByNames,
+        getStoryCardsAsMap: this.getStoryCardsAsMap,
+        addStoryCard: this.addStoryCard,
+        setState: this.setState,
+        getState: this.getState,
+        removeState: this.removeState,
+    }
+    // #endregion
+    /**
+     * Gets the current turn order.
+     * @deprecated Moved to MysticalSorenUtilities.AIDungeon
+     * @returns {number} number
+     */
     static getTurnOrder() {
         return info.actionCount || 0;
     }
@@ -99,6 +119,18 @@ class MysticalSorenUtilities {
         }
         return arr[Math.floor(Math.random() * arr.length)]
     }
+    /**
+     * @typedef {Object} HistoryEntry
+     * @property {String} text
+     * @property {String} rawText deprecated, yse text.
+     * @property {"start" | "continue" | "do" | "say" | "story" | "see"} type
+     */
+    /**
+     * Returns the latest action taken by the player.
+     * @deprecated
+     * @param {"input" | "context" | "output"} context the current context it is running on
+     * @returns {HistoryEntry | {}} HistoryEntry. On fail, it returns a empty object.
+     */
     static getRecentAction(context) {
         if (!this.hasItems(history)) {
             this.#Private.Debugger.log("Could not get recent action. There are no actions.")
@@ -120,6 +152,7 @@ class MysticalSorenUtilities {
     }
     /**
      * Gets the storyCards index given an storycard.id
+     * @deprecated
      * @param {number | String} id storycard.id
      * @returns {number} number. If not found, returns -1.
      */
@@ -137,6 +170,12 @@ class MysticalSorenUtilities {
         this.#Private.Debugger.log(`Could not get story card by id with the search id of "${id}"`)
         return -1
     }
+    /**
+     * Gets a list of storycard ids matching the name given.
+     * @deprecated
+     * @param {String} name storycard.title
+     * @returns {String[]} An array of storycard.id, if any.
+     */
     static getStoryCardIdsByName(name) {
         const result = []
         if (typeof name !== "string") {
@@ -150,6 +189,24 @@ class MysticalSorenUtilities {
         }
         return result
     }
+    /**
+     * @typedef {Object} StoryCard
+     * @property {String} id
+     * @property {String} createdAt
+     * @property {String} updatedAt
+     * @property {String} keys also known as Triggers
+     * @property {String} entry
+     * @property {String} type
+     * @property {String} title
+     * @property {String} description also known as Notes
+     * @property {boolean} useForCharacterCreation
+     */
+    /**
+     * Gets StoryCards given a list of storycard.id
+     * @deprecated
+     * @param {String[] | number[]} ids a list of storycard.id
+     * @returns {StoryCard[]} A array of StoryCards
+     */
     static getStoryCardsByIds(ids) {
         const result = []
         if (!this.hasItems(ids)) {
@@ -165,6 +222,12 @@ class MysticalSorenUtilities {
         }
         return result
     }
+    /**
+     * Gets StoryCards matching the name(s) given.
+     * @deprecated
+     * @param {String[]} names a Array of storycard.title
+     * @returns {StoryCard[]}
+     */
     static getStoryCardsByNames(names) {
         const result = new Set()
         if (!this.hasItems(names)) {
@@ -180,6 +243,13 @@ class MysticalSorenUtilities {
         }
         return Array.from(result)
     }
+    /**
+     * Converts a array of StoryCards into a Map with the storycard.id
+     * being the key to the StoryCard
+     * @deprecated
+     * @param {StoryCard[]} _storyCards An array of StoryCards
+     * @returns {Map<string,StoryCard>} an map of storycard.id keys to StoryCard values
+     */
     static getStoryCardsAsMap(_storyCards) {
         let __storyCards = _storyCards
         if (!this.hasItems(_storyCards)) {
@@ -191,23 +261,58 @@ class MysticalSorenUtilities {
             result.set(storyCard.id, storyCard)
         }
         return result
-
     }
+    /**
+     * Sets the state to the global state.
+     * @deprecated
+     * @param {String} stateName the state name
+     * @param {Object} stateObject the state object
+     */
     static setState(stateName, stateObject) {
         state[stateName] = stateObject
     }
+    /**
+     * Gets the state.
+     * @deprecated
+     * @param {String} stateName the state name
+     * @param {Object} alternative the given result if the given stateName is undefined.
+     * @returns {Object}
+     */
     static getState(stateName, alternative = {}) {
         return state[stateName] || alternative
     }
+    /**
+     * Removes the state.
+     * @deprecated
+     * @param {String} stateName the state name
+     */
     static removeState(stateName) {
         state[stateName] = undefined
     }
+    /**
+     * Adds a StoryCard.
+     * @deprecated
+     * @param {String} title the name of the story card
+     * @param {String} entry the contents of the story card
+     * @param {String} description the description of the story card
+     * @param {String} type the category of the story card
+     * @param {String} keys the triggers of the story card
+     * @returns {StoryCard}
+     */
     static addStoryCard(title = "", entry = "", description = "", type = "class", keys = "") {
         const card = storyCards[addStoryCard(keys, entry, type) - 1]
         card.title = title
         card.description = description
         return card
     }
+    /**
+     * Adds the configuration.
+     * @deprecated
+     * @param {String} namespace the state name
+     * @param {String} type the category of the story card
+     * @param {String} description the description of the story card
+     * @returns {StoryCard}
+     */
     static addStoryCardConfig(namespace = "", type = "class", description = "") {
         const card = this.addStoryCard(namespace, JSON.stringify(this.getState(namespace), (_, value) => { return value }, 1), description, type)
         return card
