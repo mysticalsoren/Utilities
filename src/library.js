@@ -114,18 +114,18 @@ class MysticalSorenUtilities {
          * @returns {HistoryEntry | {}} HistoryEntry. On fail, it returns a empty object.
          */
         getRecentAction(context) {
-            if (!this.hasItems(history)) {
-                this.#Private.Debugger.log("Could not get recent action. There are no actions.")
+            if (!MysticalSorenUtilities.hasItems(history)) {
+                MysticalSorenUtilities.#Private.Debugger.log("Could not get recent action. There are no actions.")
                 return {}
             }
             if (typeof context != "string") {
-                this.#Private.Debugger.log("Could not get recent action. context is not a string.")
+                MysticalSorenUtilities.#Private.Debugger.log("Could not get recent action. context is not a string.")
                 return {}
             }
             if (context.toLowerCase() in ["context", "output"]) {
-                this.#Private.Debugger.log("Could not get recent action. It isn't ran in the Context Hook!")
+                MysticalSorenUtilities.#Private.Debugger.log("Could not get recent action. It isn't ran in the Context Hook!")
                 if (context.toLowerCase() === "input") {
-                    this.#Private.Debugger.log('Use "text" instead to get the recent action!')
+                    MysticalSorenUtilities.#Private.Debugger.log('Use "text" instead to get the recent action!')
                     return {}
                 }
                 return {}
@@ -139,7 +139,7 @@ class MysticalSorenUtilities {
          */
         getStoryCardIndexById(id) {
             if (typeof id in ["number", "string"]) {
-                this.#Private.Debugger.log("Could not get story card by id. id is not a number!")
+                MysticalSorenUtilities.#Private.Debugger.log("Could not get story card by id. id is not a number!")
                 return -1
             }
             id = String(id)
@@ -148,7 +148,7 @@ class MysticalSorenUtilities {
                     return index
                 }
             }
-            this.#Private.Debugger.log(`Could not get story card by id with the search id of "${id}"`)
+            MysticalSorenUtilities.#Private.Debugger.log(`Could not get story card by id with the search id of "${id}"`)
             return -1
         },
         /**
@@ -158,8 +158,8 @@ class MysticalSorenUtilities {
          */
         getStoryCardsByIds(ids) {
             const result = []
-            if (!this.hasItems(ids)) {
-                this.#Private.Debugger.log("Could not get story cards. There are no ids to go through.")
+            if (!MysticalSorenUtilities.hasItems(ids)) {
+                MysticalSorenUtilities.#Private.Debugger.log("Could not get story cards. There are no ids to go through.")
                 return result
             }
             for (const id of ids) {
@@ -179,7 +179,7 @@ class MysticalSorenUtilities {
         getStoryCardIdsByName(name) {
             const result = []
             if (typeof name !== "string") {
-                this.#Private.Debugger.log("Could not get story card id by name. name is not a number!")
+                MysticalSorenUtilities.#Private.Debugger.log("Could not get story card id by name. name is not a number!")
                 return result
             }
             for (const storyCard of storyCards) {
@@ -196,8 +196,8 @@ class MysticalSorenUtilities {
          */
         getStoryCardsByNames(names) {
             const result = new Set()
-            if (!this.hasItems(names)) {
-                this.#Private.Debugger.log("Could not get story cards. There are no names to go through.")
+            if (!MysticalSorenUtilities.hasItems(names)) {
+                MysticalSorenUtilities.#Private.Debugger.log("Could not get story cards. There are no names to go through.")
                 return Array.from(result)
             }
             for (const name of names) {
@@ -217,8 +217,8 @@ class MysticalSorenUtilities {
          */
         getStoryCardsAsMap(_storyCards) {
             let __storyCards = _storyCards
-            if (!this.hasItems(_storyCards)) {
-                this.#Private.Debugger.log("Given storyCards has no items. Defaulting to global storyCards")
+            if (!MysticalSorenUtilities.hasItems(_storyCards)) {
+                MysticalSorenUtilities.#Private.Debugger.log("Given storyCards has no items. Defaulting to global storyCards")
                 __storyCards = storyCards
             }
             const result = new Map()
