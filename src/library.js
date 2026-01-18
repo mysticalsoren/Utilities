@@ -38,7 +38,7 @@ class MysticalSorenUtilities {
                     }
                     if (MysticalSorenUtilities.hasKeys(value)) {
                         result += "{"
-                        for (const [k, v] of value.entries()) {
+                        for (const [k, v] of Object.entries(value)) {
                             result += `${k}: ${composeString(v)},`
                         }
                         result = result.substring(0, result.length - 1) + "}"
