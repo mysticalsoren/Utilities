@@ -281,6 +281,7 @@
      * __Unsupported features:__
      * * Date and Time formats
      * * Inline Tables
+     * * Fractional/Exponential Float formats
      * @param {String} toml_document A TOML Document
      * @returns {Object} a Javascript Object
      * @version 1.1.0
@@ -399,9 +400,10 @@
             continue
           }
           if (isEndOfLine) {
-            try {
-              tomlValue = Number(tomlValue)
-            } catch (_) { }
+            tomlValue = tomlValue.replaceAll('_', '')
+            const lower = tomlValue.toLowerCase()
+            tomlValue = lower === "true" ? true : lower === "false" ? false : tomlValue
+            tomlValue = typeof tomlValue === "string" ? Number(tomlValue) : tomlValue
             jsonObject[tomlKey] = tomlValue
             MysticalSorenUtilities.#Private.Debugger.log("[TOML Value]=", JSON.stringify(tomlValue))
             tomlType = ""
