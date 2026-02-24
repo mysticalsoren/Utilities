@@ -376,6 +376,22 @@
               tomlValue += token.replace(/\n$/, '')
               tomlValue = tomlValue.substring(3, tomlValue.length - 4)
               MysticalSorenUtilities.#Private.Debugger.log("[TOML Value]=", JSON.stringify(tomlValue))
+              if (isValueAString(tomlKey)) {
+                tomlKey = tomlKey.substring(1, tomlKey.length - 1)
+              } else if (tomlKey.includes('.')) {
+                MysticalSorenUtilities.#Private.Debugger.log("Dotted Keys are unsupported at the moment.")
+                /*
+                const keys = tomlKey.split('.')
+                do {
+                  const k = keys.shift()
+                  if (keys.length === 0) {
+                    tomlKey = k
+                    continue
+                  }
+                  jsonObject
+                } while (keys.length > 0);
+                 */
+              }
               jsonObject[tomlKey] = tomlValue
               tomlType = ""
               tomlKey = ""
@@ -390,6 +406,22 @@
               tomlValue += token.replace(/\n$/, '')
               tomlValue = tomlValue.substring(1, tomlValue.length - 1)
               MysticalSorenUtilities.#Private.Debugger.log("[TOML Value]=", JSON.stringify(tomlValue))
+              if (isValueAString(tomlKey)) {
+                tomlKey = tomlKey.substring(1, tomlKey.length - 1)
+              } else if (tomlKey.includes('.')) {
+                MysticalSorenUtilities.#Private.Debugger.log("Dotted Keys are unsupported at the moment.")
+                /*
+                const keys = tomlKey.split('.')
+                do {
+                  const k = keys.shift()
+                  if (keys.length === 0) {
+                    tomlKey = k
+                    continue
+                  }
+                  jsonObject
+                } while (keys.length > 0);
+                 */
+              }
               jsonObject[tomlKey] = tomlValue
               tomlType = ""
               tomlKey = ""
@@ -406,6 +438,22 @@
             tomlValue = typeof tomlValue === "string" ? Number(tomlValue) : tomlValue
             jsonObject[tomlKey] = tomlValue
             MysticalSorenUtilities.#Private.Debugger.log("[TOML Value]=", JSON.stringify(tomlValue))
+            if (isValueAString(tomlKey)) {
+              tomlKey = tomlKey.substring(1, tomlKey.length - 1)
+            } else if (tomlKey.includes('.')) {
+              MysticalSorenUtilities.#Private.Debugger.log("Dotted Keys are unsupported at the moment.")
+              /*
+              const keys = tomlKey.split('.')
+              do {
+                const k = keys.shift()
+                if (keys.length === 0) {
+                  tomlKey = k
+                  continue
+                }
+                jsonObject
+              } while (keys.length > 0);
+               */
+            }
             tomlType = ""
             tomlKey = ""
             tomlValue = ""
