@@ -443,15 +443,36 @@
     }
   }
   // #endregion
+  /**
+   * Checks if the given parameter is a Array and isn't empty.
+   * @param {Array} arr The given Array object
+   * @returns {boolean}
+   */
   static hasItems(arr) {
     return Array.isArray(arr) && arr.length > 0
   }
+  /**
+   * Checks if the given Object is a basic Object.
+   * @param {Object} obj The given Object
+   * @returns {boolean}
+   */
   static isPlainObject(obj) {
     return obj && obj.constructor === Object
   }
+  /**
+   * Checks if the given Object is a basic Object and isn't empty.
+   * @param {Object} obj the given Object
+   * @returns {boolean}
+   */
   static hasKeys(obj) {
     return this.isPlainObject(obj) && Object.keys(obj).length > 0
   }
+  /**
+   * Picks a randomized value in the given Array.
+   * @template T
+   * @param {Array<T>} arr the loot table
+   * @returns {T}
+   */
   static randomItem(arr) {
     if (!this.hasItems(arr)) {
       this.#Private.Debugger.log("Could not get random item from array.")
