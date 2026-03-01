@@ -503,6 +503,15 @@
       return false
     }
     return str
-
+  }
+  /**
+   * Capitalizes the first letter with a preceding ".?!"
+   * @param {string} str the string to title-cased
+   * @returns The title-cased form
+   */
+  static toTitleCase(str) {
+    return str.replaceAll(/[.!?] [a-z]/g, (match) => {
+      return match.toUpperCase()
+    })
   }
 }
