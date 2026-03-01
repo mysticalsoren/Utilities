@@ -111,11 +111,12 @@
      * @returns {number} number. If not found, returns -1.
      */
     getStoryCardIndexById(id) {
-      if (typeof id in ["number", "string"]) {
+      const allowed_types = new Set(["number", "string"])
+      if (!allowed_types.has(typeof id)) {
         MysticalSorenUtilities.#Private.Debugger.log("Could not get story card by id. id is not a number!")
         return -1
       }
-      id = String(id)
+      id = id.toString()
       for (const [index, storyCard] of storyCards.entries()) {
         if (storyCard.id === id) {
           return index
@@ -478,5 +479,27 @@
       this.#Private.Debugger.log("Could not get random item from array.")
     }
     return arr[Math.floor(Math.random() * arr.length)]
+  }
+  /**
+   * Converts a string to its primitive.
+   * @param {string} str 
+   * @returns {string | number | boolean}
+   */
+  static convertString(str) {
+    const truthy = new Set(["true", "yes"])
+    const falsy = new Set(["false", "no"])
+    const numConversion = Number(str)
+    const lower = str.toLowerCase()
+    if (!Number.isNaN(numConversion)) {
+      return numConversion
+    }
+    if (truthy.has(lower)) {
+      return true
+    }
+    if (falsy.has(lower)) {
+      return false
+    }
+    return str
+
   }
 }
