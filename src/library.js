@@ -486,6 +486,9 @@
    * @returns {string | number | boolean}
    */
   static convertString(str) {
+    if (str.length === 0) {
+      return str
+    }
     const truthy = new Set(["true", "yes"])
     const falsy = new Set(["false", "no"])
     const numConversion = Number(str)
