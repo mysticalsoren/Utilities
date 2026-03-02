@@ -84,24 +84,24 @@
     /**
      * Returns the latest action taken by the player.
      * @param {"input" | "context" | "output"} context the current context it is running on
-     * @returns {HistoryEntry | {}} HistoryEntry. On fail, it returns a empty object.
+     * @returns {HistoryEntry} HistoryEntry. On fail, it returns null.
      */
     getRecentAction(context) {
       if (!MysticalSorenUtilities.hasItems(history)) {
         MysticalSorenUtilities.#Private.Debugger.log("Could not get recent action. There are no actions.")
-        return {}
+        return null
       }
       if (typeof context != "string") {
         MysticalSorenUtilities.#Private.Debugger.log("Could not get recent action. context is not a string.")
-        return {}
+        return null
       }
       if (context.toLowerCase() in ["context", "output"]) {
         MysticalSorenUtilities.#Private.Debugger.log("Could not get recent action. It isn't ran in the Context Hook!")
         if (context.toLowerCase() === "input") {
           MysticalSorenUtilities.#Private.Debugger.log('Use "text" instead to get the recent action!')
-          return {}
+          return null
         }
-        return {}
+        return null
       }
       return history[history.length - 1]
     },
