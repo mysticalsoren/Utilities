@@ -506,12 +506,20 @@
   }
   /**
    * Capitalizes the first letter with a preceding ".?!"
-   * @param {string} str the string to title-cased
-   * @returns The title-cased form
+   * @param {string} str the string to sentence-case
+   * @returns The sentence-cased form
    */
-  static toTitleCase(str) {
-    return str.replaceAll(/[.!?] [a-z]/g, (match) => {
+  static toSentenceCase(str) {
+    return str.replaceAll(/(?:^|[.!?])\s*[a-z]/g, (match) => {
       return match.toUpperCase()
     })
+  }
+  /**
+   * Escapes a character with a preceding "\"
+   * @param {string} str the string to begin the escaping
+   * @returns {string} The escaped form
+   */
+  static escapeCharacter(str) {
+    return str.replaceAll(/\\(.)/g, "$1")
   }
 }
