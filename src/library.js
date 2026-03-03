@@ -87,7 +87,7 @@
      */
     isRetryTurn() {
       return this.getTurnOrder() === (history.length + 1)
-    }
+    },
     /**
      * Returns the latest action taken by the player.
      * @param {"input" | "context" | "output"} context the current context it is running on
