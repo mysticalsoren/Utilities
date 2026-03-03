@@ -82,6 +82,13 @@
       return info.actionCount || 0
     },
     /**
+     * Detects if it is running under retry context. Works on Context and Output.
+     * @returns {boolean} Returns true if it is a retry action
+     */
+    isRetryTurn() {
+      return this.getTurnOrder() === (history.length + 1)
+    }
+    /**
      * Returns the latest action taken by the player.
      * @param {"input" | "context" | "output"} context the current context it is running on
      * @returns {HistoryEntry} HistoryEntry. On fail, it returns null.
