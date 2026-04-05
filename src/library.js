@@ -8,7 +8,7 @@
    * @property {String} namespace
    * @property {String} separator
    * @property {boolean} enabled
-   * @property {(...any) => void} log
+   * @property {(values: any) => void} log
    */
   /**
    * A class for everything related to troubleshooting and logging.
@@ -522,11 +522,167 @@
     })
   }
   /**
-   * Escapes a character with a preceding "\"
+   * Escapes a character with a preceding "\\"
    * @param {string} str the string to begin the escaping
    * @returns {string} The escaped form
    */
   static escapeCharacter(str) {
     return str.replaceAll(/\\(.)/g, "$1")
+  }
+  /**
+   * @typedef {[[string, string]?]} ParseResult
+   * ParseResult is a array containing a bi-array of a key and value.
+   * In which, the key is the delimiter used and value is the parsed string.
+   */
+  /**
+   * @typedef {Object} StringParser
+   * 
+   * @property {string} document The given document
+   * @property {Array<string>} delimiters A string of characters. \
+   * Once the preceding delimiter is found, it proceeds to the next character. \
+   * If the line transverses through all delimiters, it will error unless loop is enabled.
+   * @property {boolean} loop Whether to loop delimiters.
+   * 
+   * == Methods ==
+   * @property {() => boolean} hasLines Remaining lines is above zero?
+   * @property {(ClearOnError: boolean) => ParseResult} readLine Parses the next line.
+   * \
+   * \
+   * \@param ClearOnError {boolean} - Return the parsed values even if it has errored. Default: True
+   * \
+   * \
+   * \@returns {ParseResult} A array containing a bi-array of a key and value.
+   *  In which, the key is the delimiter used and value is the parsed string.
+   * \
+   * \
+   * Errors:
+   * \
+   * NoLinesError - There are no more lines to read. \
+   * NoDelimitersError - The given delimiters is empty. \
+   * ExceededDelimiterError - There are no more delimiters to consume. \
+   * InsufficientDelimiterError - Line was completed before all delimiters could be consumed.
+   * @property {() => boolean} toggleLoop Toggles delimiter loop.
+   * @property {(i: number) => void} setIndex sets the document index within limitations.
+   * @property {() => number} getIndex gets the document index.
+   */
+  /**
+   * @param {string} [document=[]] The string document
+   * @param {string | string[]} [delimiters=[]] A comma-separated string to create delimiters. If given a array, its items must be a string. Otherwise, it will return a empty array.
+   * @returns {StringParser}
+   */
+  static StringParser(document, delimiters) {
+    let idx = 0
+    return {
+      document: typeof document === "string" ? document : "",
+      get delimiters() {
+        if (Array.isArray(delimiters)) {
+          let valid = true
+          delimiters.forEach((v) => {
+            if (!valid) {
+              return
+            }
+            if (typeof v !== "string") {
+              MysticalSorenUtilities.#Private.Debugger.log(`[InvalidDelimiter] Given Delimiters are not type of string! Found value '${v}' with the type '${typeof v}'`)
+              valid = false
+            }
+          })
+          return valid ? new Array(...new Set(delimiters)) : new Array()
+        }
+        return typeof delimiters === "string" ? new Array(...new Set(delimiters.split(','))) : new Array()
+      },
+      loop: false,
+      hasLines() {
+        return idx < this.document.length
+      },
+      readLine(ClearOnError = true) {
+        ClearOnError = typeof ClearOnError === "boolean" ? ClearOnError : true
+        /**
+         * @type {ParseResult}
+         */
+        const parsedValues = []
+        if (!this.hasLines()) {
+          MysticalSorenUtilities.#Private.Debugger.log("[NoLinesError] StringParser has no more lines to read!")
+          return parsedValues
+        }
+        let newline = this.document.indexOf('\n', idx)
+        newline = newline < 0 ? this.document.length : newline
+        let content = this.document.substring(idx, newline)
+        this.setIndex(newline + 1)
+
+        if (this.delimiters.length === 0) {
+          MysticalSorenUtilities.#Private.Debugger.log("[NoDelimitersError] StringParser has no delimiters!")
+          parsedValues.push(['', content])
+          return parsedValues
+        }
+        let cxtIdx = 0
+        let dmtIdx = 0
+        while (cxtIdx < content.length) {
+          let delimiter = this.delimiters[dmtIdx % this.delimiters.length]
+          if (!this.loop) {
+            if (dmtIdx >= this.delimiters.length) {
+              if (content.indexOf(this.delimiters[0], cxtIdx) > 0) {
+                MysticalSorenUtilities.#Private.Debugger.log(`[ExceededDelimiterError] StringParser has ran out of delimiters for '${content}'. Given delimiter were '${this.delimiters}'`)
+                if (ClearOnError) {
+                  parsedValues.splice(0)
+                }
+                return parsedValues
+              }
+              dmtIdx = this.delimiters.length
+              dmtIdx--
+            }
+            delimiter = this.delimiters[dmtIdx]
+          }
+          let cutoff = content.indexOf(delimiter, cxtIdx)
+          if (dmtIdx === this.delimiters.length - 1) {
+            cutoff = cutoff < 0 ? content.length : cutoff
+          }
+          while (delimiter.length === 1 && cutoff > -1 && content.charAt(cutoff - 1) === '\\') {
+            cutoff++
+            cutoff = content.indexOf(delimiter, cutoff)
+            if (cutoff < 0) {
+              cutoff = content.length
+              break
+            }
+          }
+          if (cutoff > cxtIdx) {
+            parsedValues.push(
+              [
+                delimiter,
+                MysticalSorenUtilities.escapeCharacter(
+                  content.substring(cxtIdx, cutoff)
+                )
+              ]
+            )
+            cxtIdx = cutoff
+            cxtIdx += delimiter.length
+          }
+          dmtIdx++
+        }
+        if (dmtIdx % this.delimiters.length !== 0) {
+          MysticalSorenUtilities.#Private.Debugger.log(`[InsufficientDelimiterError] StringParser couldn't parse line! Not all delimiters were used for '${content}'. Given delimiters were ${this.delimiters}'`)
+          if (ClearOnError) {
+            parsedValues.splice(0)
+          }
+          return parsedValues
+        }
+        return parsedValues
+      },
+      toggleLoop() {
+        this.loop = !this.loop
+        return this.loop
+      },
+      setIndex(i) {
+        idx = typeof i === "number" ? i : idx
+        if (idx < 0) {
+          idx = 0
+        }
+        if (idx > this.document.length) {
+          idx = this.document.length
+        }
+      },
+      getIndex() {
+        return idx
+      }
+    }
   }
 }
