@@ -26,10 +26,18 @@
           return
         }
         let apex = namespace + ":"
+        /**
+         * Recursivly go through the number of values, stringifying the value.
+         * @param {*} value Any datatype is accepted.
+         * @returns the stringified value
+         */
         const composeString = (value) => {
           let result = ""
           if (MysticalSorenUtilities.hasItems(value)) {
             result += "["
+            /**
+             * @param {*} item
+             */
             value.forEach(item => {
               result += `${composeString(item)},`
             });
@@ -247,6 +255,13 @@
     removeState(stateName) {
       state[stateName] = undefined
     },
+    /**
+     * Returns the scenario's placeholders. These are the prompts before the adventure begins, sorted by AI priority then line number presence. 
+     * @returns {Array<Object>}
+     */
+    getPlaceholders() {
+      return state["placeholders"]
+    }
   }
   // #endregion
 
