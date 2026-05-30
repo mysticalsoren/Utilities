@@ -81,6 +81,11 @@
    * @property {String} description also known as Notes
    * @property {boolean} useForCharacterCreation
    */
+  /**
+   * @typedef {Object} Placeholder
+   * @property {string} question
+   * @property {string} answer
+   */
   static AIDungeon = {
     /**
      * Gets the current turn order.
@@ -257,7 +262,7 @@
     },
     /**
      * Returns the scenario's placeholders. These are the prompts before the adventure begins, sorted by AI priority then line number presence. 
-     * @returns {Array<Object>}
+     * @returns {Array<Placeholder>}
      */
     getPlaceholders() {
       return state["placeholders"]
