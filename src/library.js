@@ -25,39 +25,40 @@
         if (!this.enabled) {
           return
         }
-        let apex = namespace + ":"
+        let message = namespace + ":"
         /**
          * Recursivly go through the number of values, stringifying the value.
-         * @param {*} value Any datatype is accepted.
+         * @param {any} value Any datatype is accepted.
          * @returns the stringified value
          */
         const composeString = (value) => {
-          let result = ""
+          let component = ""
           if (MysticalSorenUtilities.hasItems(value)) {
-            result += "["
-            /**
-             * @param {*} item
-             */
-            value.forEach(item => {
-              result += `${composeString(item)},`
-            });
-            result = result.substring(0, result.length - 1) + "]"
-            return result
+            component += "["
+
+            /** @param {any} item */
+            const vCallback = (item) => {
+              component += `${composeString(item)},`
+            }
+            value.forEach(vCallback);
+
+            component = component.substring(0, component.length - 1) + "]"
+            return component
           }
           if (MysticalSorenUtilities.hasKeys(value)) {
-            result += "{"
+            component += "{"
             for (const [k, v] of Object.entries(value)) {
-              result += `${k}: ${composeString(v)},`
+              component += `${k}: ${composeString(v)},`
             }
-            result = result.substring(0, result.length - 1) + "}"
-            return result
+            component = component.substring(0, component.length - 1) + "}"
+            return component
           }
           return `${value}`
         }
         for (const value of values) {
-          apex += separator + composeString(value)
+          message += separator + composeString(value)
         }
-        console.log(apex)
+        console.log(message)
       }
     }
   }
@@ -83,8 +84,8 @@
    */
   /**
    * @typedef {Object} Placeholder
-   * @property {string} question
-   * @property {string} answer
+   * @property {string} question The prompt that asks the user.
+   * @property {string} answer The given response to the corresponding question.
    */
   static AIDungeon = {
     /**
@@ -104,7 +105,7 @@
     /**
      * Returns the latest action taken by the player.
      * @param {"input" | "context" | "output"} context the current context it is running on
-     * @returns {HistoryEntry} HistoryEntry. On fail, it returns null.
+     * @returns {HistoryEntry?} HistoryEntry.
      */
     getRecentAction(context) {
       if (!MysticalSorenUtilities.hasItems(history)) {
@@ -127,96 +128,96 @@
     },
     /**
      * Gets the storyCards index given an storycard.id
-     * @param {number | String} id storycard.id
+     * @param {number | string} id storycard.id
      * @returns {number} number. If not found, returns -1.
      */
     getStoryCardIndexById(id) {
-      const allowed_types = new Set(["number", "string"])
-      if (!allowed_types.has(typeof id)) {
-        MysticalSorenUtilities.#Private.Debugger.log("Could not get story card by id. id is not a number!")
+      if (typeof id === "string" || typeof id === "number") {
+        id = id.toString()
+        for (const [index, storyCard] of storyCards.entries()) {
+          if (storyCard.id === id) {
+            return index
+          }
+        }
+        MysticalSorenUtilities.#Private.Debugger.log(`Could not get story card by id with the search id of "${id}"`)
         return -1
       }
-      id = id.toString()
-      for (const [index, storyCard] of storyCards.entries()) {
-        if (storyCard.id === id) {
-          return index
-        }
-      }
-      MysticalSorenUtilities.#Private.Debugger.log(`Could not get story card by id with the search id of "${id}"`)
+      MysticalSorenUtilities.#Private.Debugger.log("Could not get story card by id. id is not a number!")
       return -1
+
+
     },
     /**
      * Gets StoryCards given a list of storycard.id
-     * @param {String[] | number[]} ids a list of storycard.id
+     * @param {string[] | number[]} ids a list of storycard.id
      * @returns {StoryCard[]} A array of StoryCards
      */
     getStoryCardsByIds(ids) {
-      const result = []
+      /** @type {StoryCard[]} */
+      const cards = []
       if (!MysticalSorenUtilities.hasItems(ids)) {
         MysticalSorenUtilities.#Private.Debugger.log("Could not get story cards. There are no ids to go through.")
-        return result
+        return cards
       }
       for (const id of ids) {
         const idx = this.getStoryCardIndexById(id)
         if (idx < 0) {
           continue
         }
-        result.push(storyCards[idx])
+        cards.push(storyCards[idx])
       }
-      return result
-    },
-    /**
-     * Gets a list of storycard ids matching the name given.
-     * @param {String} name storycard.title
-     * @returns {String[]} An array of storycard.id, if any.
-     */
-    getStoryCardIdsByName(name) {
-      const result = []
-      if (typeof name !== "string") {
-        MysticalSorenUtilities.#Private.Debugger.log("Could not get story card id by name. name is not a number!")
-        return result
-      }
-      for (const storyCard of storyCards) {
-        if (storyCard.title === name) {
-          result.push(storyCard.id)
-        }
-      }
-      return result
+      return cards
     },
     /**
      * Gets StoryCards matching the name(s) given.
-     * @param {String[]} names a Array of storycard.title
+     * @param {string[]} names A array of storycard.title
      * @returns {StoryCard[]}
      */
     getStoryCardsByNames(names) {
-      const result = new Set()
+      /** @type {StoryCard[]} */
+      const cards = []
       if (!MysticalSorenUtilities.hasItems(names)) {
         MysticalSorenUtilities.#Private.Debugger.log("Could not get story cards. There are no names to go through.")
-        return Array.from(result)
+        return cards
       }
       for (const name of names) {
-        const ids = this.getStoryCardIdsByName(name)
-        const _storyCards = this.getStoryCardsByIds(ids)
-        for (const storyCard of _storyCards) {
-          result.add(storyCard)
+        for (const storyCard of storyCards) {
+          if (storyCard.title === name) {
+            cards.push(storyCard)
+          }
         }
       }
-      return Array.from(result)
+      return cards
+    },
+    /**
+     * Gets a list of storycard ids matching the name given.
+     * @param {string} name storycard.title
+     * @returns {string[]} An array of storycard.id, if any.
+     */
+    getStoryCardIdsByName(name) {
+      /** @type {string[]} */
+      const cards = []
+      for (const storyCard of this.getStoryCardsByNames([name])) {
+        cards.push(storyCard.id)
+      }
+      return cards
     },
     /**
      * Converts a array of StoryCards into a Map with the storycard.id
      * being the key to the StoryCard
-     * @param {StoryCard[]} _storyCards An array of StoryCards
+     * @param {StoryCard[]?} _storyCards An array of StoryCards. If left empty, it defaults to the global storyCards.
      * @returns {Map<string,StoryCard>} an map of storycard.id keys to StoryCard values
      */
-    getStoryCardsAsMap(_storyCards) {
-      let __storyCards = _storyCards
+    getStoryCardsAsMap(_storyCards = null) {
       if (!MysticalSorenUtilities.hasItems(_storyCards)) {
-        MysticalSorenUtilities.#Private.Debugger.log("Given storyCards has no items. Defaulting to global storyCards")
-        __storyCards = storyCards
+        MysticalSorenUtilities.#Private.Debugger.log(`\
+          Given storyCards has no items. Defaulting to global storyCards\
+        `)
+        _storyCards = storyCards
       }
       const result = new Map()
-      for (const storyCard of __storyCards) {
+      // @ts-ignore
+      for (const storyCard of _storyCards) {
         result.set(storyCard.id, storyCard)
       }
       return result
@@ -242,15 +243,36 @@
      * @param {Object} stateObject the state object
      */
     setState(stateName, stateObject) {
+      if (typeof stateName !== "string") {
+        MysticalSorenUtilities.#Private.Debugger.log(`\
+          Couldn't set state. The name isn't type of "string", found "${typeof stateName}"\
+        `)
+        return
+      }
+      if (!MysticalSorenUtilities.isPlainObject(stateObject)) {
+        MysticalSorenUtilities.#Private.Debugger.log(`\
+          Couldn't set state. The stateObject isn't a plain Object.\
+        `)
+        return
+      }
+      // @ts-ignore
       state[stateName] = stateObject
     },
     /**
      * Gets the state.
      * @param {String} stateName the state name
-     * @param {Object} alternative the given result if the given stateName is undefined.
+     * @param {Object} alternative Returns this object if it fails. If left out, it gives an empty Object.
      * @returns {Object}
      */
     getState(stateName, alternative = {}) {
+      alternative = !MysticalSorenUtilities.isPlainObject(alternative) ? alternative : {}
+      if (typeof stateName !== "string") {
+        MysticalSorenUtilities.#Private.Debugger.log(`\
+          Couldn't get state. The name isn't type of "string", found "${typeof stateName}. Returning with alternative..."\
+        `)
+        return alternative
+      }
+      // @ts-ignore
       return state[stateName] || alternative
     },
     /**
@@ -258,222 +280,21 @@
      * @param {String} stateName the state name
      */
     removeState(stateName) {
+      if (typeof stateName !== "string") {
+        MysticalSorenUtilities.#Private.Debugger.log(`\
+          Couldn't remove state. The name isn't type of "string", found "${typeof stateName}"\
+        `)
+        return
+      }
+      // @ts-ignore
       state[stateName] = undefined
-    },
-    /**
-     * Returns the scenario's placeholders. These are the prompts before the adventure begins, sorted by AI priority then line number presence. 
-     * @returns {Array<Placeholder>}
-     */
-    getPlaceholders() {
-      return state["placeholders"]
     }
   }
   // #endregion
 
-  // #region TOML
-  /**
-   * A class for generating and parsing TOML.
-   * @version 1.1.0
-   */
-  static TOML = {
-    /**
-     * Parses a TOML String Document.
-     * 
-     * __Unsupported features:__
-     * * Date and Time formats
-     * * Inline Tables
-     * * Fractional/Exponential Float formats
-     * @param {String} toml_document A TOML Document
-     * @returns {Object} a Javascript Object
-     * @version 1.1.0
-     */
-    parse(toml_document = "") {
-      const VERBOSE = true
-      console.log(`Current Document:
-                ${toml_document}`)
-      /**
-       * @type {"Key" | "Comment" | "Value" | ""}
-       */
-      let tomlType = ""
-      let tomlKey = ""
-      /**
-       * @type {String | Number | Array | Object}
-       */
-      let tomlValue = ""
-      let table = ""
-
-      // #region TOML Utility Methods
-      /**
-       * Checks if the given string's value is a inferred string type
-       * @param {String} str the string to check for
-       * @returns {boolean}
-       */
-      const isValueAString = (str) => {
-        return str.match(/^['"]/) ? true : false
-      }
-      /**
-       * Checks if the given string's value has unclosed quotations
-       * @param {String} str the string to check for
-       * @returns {boolean}
-       */
-      const isUnclosedString = (str) => {
-        return isValueAString(str) && str.match(/['"]$/) === null
-      }
-      // #endregion
-      const matches = Array.from(toml_document.matchAll(/[^\t \n]+[\t \n]?/g))
-      const jsonObject = {}
-      do {
-        const token = matches.shift()[0].trimStart()
-        const isEndOfLine = (token.match(/\n$/) || (matches.length === 0)) ? true : false
-        if (tomlType.length === 0) {
-          if (token.match(/^#/)) {
-            tomlType = "Comment"
-            continue
-          }
-          tomlType = "Key"
-        }
-        if (tomlType === "Comment") {
-          if (isEndOfLine) {
-            tomlType = ""
-          }
-          continue
-        }
-        if (tomlType === "Key") {
-          if (tomlKey.length === 0) {
-            tomlKey = token
-            if (isValueAString(tomlKey)) {
-              continue
-            }
-            tomlKey = tomlKey.trimEnd()
-            continue
-          }
-          if (isUnclosedString(tomlKey)) {
-            tomlKey += token
-            continue
-          }
-          if (token.match(/^=/)) {
-            tomlType = "Value"
-            tomlKey = tomlKey.trimEnd()
-            MysticalSorenUtilities.#Private.Debugger.log("[TOML Key]=", JSON.stringify(tomlKey))
-            continue
-          }
-          console.log("[Warning]!!!")
-          continue
-        }
-        if (tomlType === "Value") {
-          const isMultilineString = () => { return tomlValue.match(/^['"]{3}/) ? true : false }
-          if (tomlValue.length === 0) {
-            tomlValue = token
-            if (isValueAString(tomlValue)) {
-              if (tomlValue.match(/^['"]{3}\n/)) {
-                tomlValue = tomlValue.substring(0, 3)
-              }
-              continue
-            }
-            tomlValue = tomlValue.trimEnd()
-          }
-          if (isMultilineString()) {
-            if (token.match(/['"]{3}\n?/)) {
-              tomlValue += token.replace(/\n$/, '')
-              tomlValue = tomlValue.substring(3, tomlValue.length - 4)
-              MysticalSorenUtilities.#Private.Debugger.log("[TOML Value]=", JSON.stringify(tomlValue))
-              if (isValueAString(tomlKey)) {
-                tomlKey = tomlKey.substring(1, tomlKey.length - 1)
-              } else if (tomlKey.includes('.')) {
-                MysticalSorenUtilities.#Private.Debugger.log("Dotted Keys are unsupported at the moment.")
-                /*
-                const keys = tomlKey.split('.')
-                do {
-                  const k = keys.shift()
-                  if (keys.length === 0) {
-                    tomlKey = k
-                    continue
-                  }
-                  jsonObject
-                } while (keys.length > 0);
-                 */
-              }
-              jsonObject[tomlKey] = tomlValue
-              tomlType = ""
-              tomlKey = ""
-              tomlValue = ""
-              continue
-            }
-            tomlValue += token
-            continue
-          }
-          if (isUnclosedString(tomlValue)) {
-            if (isEndOfLine) {
-              tomlValue += token.replace(/\n$/, '')
-              tomlValue = tomlValue.substring(1, tomlValue.length - 1)
-              MysticalSorenUtilities.#Private.Debugger.log("[TOML Value]=", JSON.stringify(tomlValue))
-              if (isValueAString(tomlKey)) {
-                tomlKey = tomlKey.substring(1, tomlKey.length - 1)
-              } else if (tomlKey.includes('.')) {
-                MysticalSorenUtilities.#Private.Debugger.log("Dotted Keys are unsupported at the moment.")
-                /*
-                const keys = tomlKey.split('.')
-                do {
-                  const k = keys.shift()
-                  if (keys.length === 0) {
-                    tomlKey = k
-                    continue
-                  }
-                  jsonObject
-                } while (keys.length > 0);
-                 */
-              }
-              jsonObject[tomlKey] = tomlValue
-              tomlType = ""
-              tomlKey = ""
-              tomlValue = ""
-              continue
-            }
-            tomlValue += token
-            continue
-          }
-          if (isEndOfLine) {
-            tomlValue = tomlValue.replaceAll('_', '')
-            const lower = tomlValue.toLowerCase()
-            tomlValue = lower === "true" ? true : lower === "false" ? false : tomlValue
-            tomlValue = typeof tomlValue === "string" ? Number(tomlValue) : tomlValue
-            jsonObject[tomlKey] = tomlValue
-            MysticalSorenUtilities.#Private.Debugger.log("[TOML Value]=", JSON.stringify(tomlValue))
-            if (isValueAString(tomlKey)) {
-              tomlKey = tomlKey.substring(1, tomlKey.length - 1)
-            } else if (tomlKey.includes('.')) {
-              MysticalSorenUtilities.#Private.Debugger.log("Dotted Keys are unsupported at the moment.")
-              /*
-              const keys = tomlKey.split('.')
-              do {
-                const k = keys.shift()
-                if (keys.length === 0) {
-                  tomlKey = k
-                  continue
-                }
-                jsonObject
-              } while (keys.length > 0);
-               */
-            }
-            tomlType = ""
-            tomlKey = ""
-            tomlValue = ""
-            continue
-          }
-          console.log("[Warning]!!!")
-          continue
-        }
-        console.log(JSON.stringify(token))
-      } while (matches.length > 0);
-      MysticalSorenUtilities.#Private.Debugger.log(jsonObject)
-      console.log(jsonObject)
-      return
-    }
-  }
-  // #endregion
   /**
    * Checks if the given parameter is a Array and isn't empty.
-   * @param {Array} arr The given Array object
+   * @param {any} arr The given Array object
    * @returns {boolean}
    */
   static hasItems(arr) {
@@ -548,161 +369,5 @@
    */
   static escapeCharacter(str) {
     return str.replaceAll(/\\(.)/g, "$1")
-  }
-  /**
-   * @typedef {[[string, string]?]} ParseResult
-   * ParseResult is a array containing a bi-array of a key and value.
-   * In which, the key is the delimiter used and value is the parsed string.
-   */
-  /**
-   * @typedef {Object} StringParser
-   * 
-   * @property {string} document The given document
-   * @property {Array<string>} delimiters A string of characters. \
-   * Once the preceding delimiter is found, it proceeds to the next character. \
-   * If the line transverses through all delimiters, it will error unless loop is enabled.
-   * @property {boolean} loop Whether to loop delimiters.
-   * 
-   * == Methods ==
-   * @property {() => boolean} hasLines Remaining lines is above zero?
-   * @property {(ClearOnError: boolean) => ParseResult} readLine Parses the next line.
-   * \
-   * \
-   * \@param ClearOnError {boolean} - Return the parsed values even if it has errored. Default: True
-   * \
-   * \
-   * \@returns {ParseResult} A array containing a bi-array of a key and value.
-   *  In which, the key is the delimiter used and value is the parsed string.
-   * \
-   * \
-   * Errors:
-   * \
-   * NoLinesError - There are no more lines to read. \
-   * NoDelimitersError - The given delimiters is empty. \
-   * ExceededDelimiterError - There are no more delimiters to consume. \
-   * InsufficientDelimiterError - Line was completed before all delimiters could be consumed.
-   * @property {() => boolean} toggleLoop Toggles delimiter loop.
-   * @property {(i: number) => void} setIndex sets the document index within limitations.
-   * @property {() => number} getIndex gets the document index.
-   */
-  /**
-   * @param {string} [document=[]] The string document
-   * @param {string | string[]} [delimiters=[]] A comma-separated string to create delimiters. If given a array, its items must be a string. Otherwise, it will return a empty array.
-   * @returns {StringParser}
-   */
-  static StringParser(document, delimiters) {
-    let idx = 0
-    return {
-      document: typeof document === "string" ? document : "",
-      get delimiters() {
-        if (Array.isArray(delimiters)) {
-          let valid = true
-          delimiters.forEach((v) => {
-            if (!valid) {
-              return
-            }
-            if (typeof v !== "string") {
-              MysticalSorenUtilities.#Private.Debugger.log(`[InvalidDelimiter] Given Delimiters are not type of string! Found value '${v}' with the type '${typeof v}'`)
-              valid = false
-            }
-          })
-          return valid ? new Array(...new Set(delimiters)) : new Array()
-        }
-        return typeof delimiters === "string" ? new Array(...new Set(delimiters.split(','))) : new Array()
-      },
-      loop: false,
-      hasLines() {
-        return idx < this.document.length
-      },
-      readLine(ClearOnError = true) {
-        ClearOnError = typeof ClearOnError === "boolean" ? ClearOnError : true
-        /**
-         * @type {ParseResult}
-         */
-        const parsedValues = []
-        if (!this.hasLines()) {
-          MysticalSorenUtilities.#Private.Debugger.log("[NoLinesError] StringParser has no more lines to read!")
-          return parsedValues
-        }
-        let newline = this.document.indexOf('\n', idx)
-        newline = newline < 0 ? this.document.length : newline
-        let content = this.document.substring(idx, newline)
-        this.setIndex(newline + 1)
-
-        if (this.delimiters.length === 0) {
-          MysticalSorenUtilities.#Private.Debugger.log("[NoDelimitersError] StringParser has no delimiters!")
-          parsedValues.push(['', content])
-          return parsedValues
-        }
-        let cxtIdx = 0
-        let dmtIdx = 0
-        while (cxtIdx < content.length) {
-          let delimiter = this.delimiters[dmtIdx % this.delimiters.length]
-          if (!this.loop) {
-            if (dmtIdx >= this.delimiters.length) {
-              if (content.indexOf(this.delimiters[0], cxtIdx) > 0) {
-                MysticalSorenUtilities.#Private.Debugger.log(`[ExceededDelimiterError] StringParser has ran out of delimiters for '${content}'. Given delimiter were '${this.delimiters}'`)
-                if (ClearOnError) {
-                  parsedValues.splice(0)
-                }
-                return parsedValues
-              }
-              dmtIdx = this.delimiters.length
-              dmtIdx--
-            }
-            delimiter = this.delimiters[dmtIdx]
-          }
-          let cutoff = content.indexOf(delimiter, cxtIdx)
-          if (dmtIdx === this.delimiters.length - 1) {
-            cutoff = cutoff < 0 ? content.length : cutoff
-          }
-          while (delimiter.length === 1 && cutoff > -1 && content.charAt(cutoff - 1) === '\\') {
-            cutoff++
-            cutoff = content.indexOf(delimiter, cutoff)
-            if (cutoff < 0) {
-              cutoff = content.length
-              break
-            }
-          }
-          if (cutoff > cxtIdx) {
-            parsedValues.push(
-              [
-                delimiter,
-                MysticalSorenUtilities.escapeCharacter(
-                  content.substring(cxtIdx, cutoff)
-                )
-              ]
-            )
-            cxtIdx = cutoff
-            cxtIdx += delimiter.length
-          }
-          dmtIdx++
-        }
-        if (dmtIdx % this.delimiters.length !== 0) {
-          MysticalSorenUtilities.#Private.Debugger.log(`[InsufficientDelimiterError] StringParser couldn't parse line! Not all delimiters were used for '${content}'. Given delimiters were ${this.delimiters}'`)
-          if (ClearOnError) {
-            parsedValues.splice(0)
-          }
-          return parsedValues
-        }
-        return parsedValues
-      },
-      toggleLoop() {
-        this.loop = !this.loop
-        return this.loop
-      },
-      setIndex(i) {
-        idx = typeof i === "number" ? i : idx
-        if (idx < 0) {
-          idx = 0
-        }
-        if (idx > this.document.length) {
-          idx = this.document.length
-        }
-      },
-      getIndex() {
-        return idx
-      }
-    }
   }
 }
